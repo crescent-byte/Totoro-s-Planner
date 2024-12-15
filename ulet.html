@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List w/ Totoro</title>
+    <style>
+        /* Global styles */
+        body {
+            font-family: 'Script MT Bold', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-image: url('https://i.pinimg.com/736x/15/cf/89/15cf890e02118daf70cab1b664612c04.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+        
+
+        .container {
+            background: rgba(47, 155, 56, 0.8); /* Semi-transparent background */
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.1);
+            width: 400px;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        .title {
+            font-size: 2em;
+            color: #14451b;
+            margin-bottom: 20px;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        /* Corrected Image Section */
+        .ghibli-image img {
+            width: 150px;
+            height: auto;
+            border-radius: 10px;
+        }
+
+        input[type="text"], select, input[type="date"], input[type="time"] {
+            padding: 12px;
+            width: 70%;
+            margin: 10px 0;
+            font-size: 1.1em;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+
+        button {
+            padding: 12px 25px;
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+
+        .task-list ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .task-list li {
+            background-color: #fff;
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .priority {
+            font-weight: bold;
+        }
+
+        .priority-high {
+            color: red;
+        }
+
+        .priority-medium {
+            color: orange;
+        }
+
+        .priority-low {
+            color: green;
+        }
+
+        .deadline {
+            font-style: italic;
+            color: #444;
+        }
+
+        .reminder {
+            color: #8b0000;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">To-Do List w/ Totoro</h1>
+
+        <!-- Add Image Here -->
+        <div class="ghibli-image">
+            <img src="https://img.icons8.com/?size=80&id=IRRpeULs7luU&format=png" alt="Ghibli Icon">
+        </div>
+
+        <input type="text" id="taskInput" placeholder="Add a task..." />
+
+        <!-- Priority Dropdown -->
+        <select id="prioritySelect">
+            <option value="High">High Priority</option>
+            <option value="Medium">Medium Priority</option>
+            <option value="Low">Low Priority</option>
+        </select>
+
+        <!-- Deadline Input -->
+        <input type="date" id="deadlineInput" />
+
+        <!-- Reminder Time Input -->
+        <input type="time" id="reminderInput" />
+
+        <button id="addTaskButton">Add Task</button>
+
+        <div class="task-list">
+            <ul id="tasks"></ul>
+        </div>
+
+        <button id="sortTasksButton">Sort Tasks</button>
+    </div>
+
+    <script>
+        // JavaScript code to handle tasks
+
+        document.getElementById('addTaskButton').addEventListener('click', addTask);
+        document.getElementById('sortTasksButton').addEventListener('click', sortTasks);
+
+        let tasks = [];
+
+        // Add task to the task list
+        function addTask() {
+            const taskInput = document.getElementById('taskInput');
+            const taskText = taskInput.value.trim();
+            const prioritySelect = document.getElementById('prioritySelect');
+            const priority = prioritySelect.value;
+            const deadlineInput = document.getElementById('deadlineInput');
+            const deadline = deadlineInput.value;
+            const reminderInput = document.getElementById('reminderInput');
+            const reminder = reminderInput.value;
+
+            if (taskText !== "") {
+                tasks.push({ task: taskText, priority: priority, deadline: deadline, reminder: reminder });
+                taskInput.value = ''; // Clear input field
+                deadlineInput.value = ''; // Clear deadline field
+                reminderInput.value = ''; // Clear reminder field
+                displayTasks();
+
+                // Set up a reminder alert
+                if (reminder && deadline) {
+                    setReminder(deadline, reminder, taskText);
+                }
+            }
+        }
+
+        // Display all tasks
+        function displayTasks() {
+            const taskList = document.getElementById('tasks');
+            taskList.innerHTML = ''; // Clear the list before displaying updated tasks
+            
+            tasks.forEach((task, index) => {
+                const li = document.createElement('li');
+                
+                // Set priority class based on task priority
+                const priorityClass = `priority-${task.priority.toLowerCase()}`;
+                li.innerHTML = `
+                    <span>${task.task}</span>
+                    <span class="priority ${priorityClass}">${task.priority}</span>
+                    <span class="deadline">${task.deadline}</span>
+                    <span class="reminder">${task.reminder ? "Reminder: " + task.reminder : ""}</span>
+                `;
+                
+                taskList.appendChild(li);
+            });
+        }
+
+        // QuickSort algorithm to sort tasks by priority or deadline
+        function sortTasks() {
+            const sortByDeadline = confirm('Do you want to sort by deadline? Click "OK" for Yes, "Cancel" for priority sorting.');
+            
+            // Quick Sort algorithm to sort based on priority (High > Medium > Low) or deadline
+            function quickSort(arr, byDeadline = false) {
+                if (arr.length <= 1) {
+                    return arr;
+                }
+
+                const pivot = arr[arr.length - 1][byDeadline ? 'deadline' : 'priority'];
+                const left = [];
+                const right = [];
+
+                for (let i = 0; i < arr.length - 1; i++) {
+                    if (byDeadline) {
+                        // Sort by deadline (earlier date first)
+                        if (arr[i].deadline < pivot) {
+                            left.push(arr[i]);
+                        } else {
+                            right.push(arr[i]);
+                        }
+                    } else {
+                        // Sort by priority (High > Medium > Low)
+                        if (comparePriority(arr[i].priority, pivot)) {
+                            left.push(arr[i]);
+                        } else {
+                            right.push(arr[i]);
+                        }
+                    }
+                }
+
+                return [...quickSort(left, byDeadline), arr[arr.length - 1], ...quickSort(right, byDeadline)];
+            }
+
+            tasks = quickSort(tasks, sortByDeadline);
+            displayTasks();
+        }
+
+        // Compare priority for sorting: High > Medium > Low
+        function comparePriority(priority1, priority2) {
+            const priorityOrder = { High: 3, Medium: 2, Low: 1 };
+            return priorityOrder[priority1] > priorityOrder[priority2];
+        }
+
+        // Set up a reminder alert
+        function setReminder(deadline, reminderTime, taskText) {
+            const reminderDate = new Date(deadline + "T" + reminderTime);
+            const currentTime = new Date();
+
+            const timeUntilReminder = reminderDate.getTime() - currentTime.getTime();
+
+            if (timeUntilReminder > 0) {
+                setTimeout(() => {
+                    alert(`Reminder: Task "${taskText}" is due soon!`);
+                }, timeUntilReminder);
+            }
+        }
+    </
+
